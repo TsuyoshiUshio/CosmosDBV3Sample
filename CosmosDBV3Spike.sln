@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.28307.271
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmosDBV3Spike", "CosmosDBV3Spike\CosmosDBV3Spike.csproj", "{7E22B582-1B8A-4FD5-A0E9-5A8090E88202}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmosDBV3Spike.Test", "CosmodDBV3Spike.Test\CosmosDBV3Spike.Test.csproj", "{D8FB946D-23D7-499F-80E2-4B968A25C541}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmosDBV3Spike.IntegrationTest", "CosmosDBV3Spike.IntegrationTest\CosmosDBV3Spike.IntegrationTest.csproj", "{70FA3969-5039-4F44-8BFC-3A664488876A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{7E22B582-1B8A-4FD5-A0E9-5A8090E88202}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E22B582-1B8A-4FD5-A0E9-5A8090E88202}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E22B582-1B8A-4FD5-A0E9-5A8090E88202}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8FB946D-23D7-499F-80E2-4B968A25C541}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8FB946D-23D7-499F-80E2-4B968A25C541}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8FB946D-23D7-499F-80E2-4B968A25C541}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8FB946D-23D7-499F-80E2-4B968A25C541}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70FA3969-5039-4F44-8BFC-3A664488876A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70FA3969-5039-4F44-8BFC-3A664488876A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70FA3969-5039-4F44-8BFC-3A664488876A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70FA3969-5039-4F44-8BFC-3A664488876A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
