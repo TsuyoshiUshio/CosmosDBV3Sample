@@ -39,23 +39,23 @@ namespace CosmosDBV3Spike.Test
         public async Task CreateItemAsyncTest()
         {
             var fixture = new TodoFixture();
-
-            fixture.InputTodo = new Todo
-            {
-                UserName = "Tsuyoshi Ushio",
-                TaskName = "Tidy up my bedroom",
-                Type = "household",
-                IsSparkJoy = true
-            };
-            fixture.ExpectedTodo = fixture.InputTodo.Clone();
-            fixture.ExpectedTodo.Id = "foo";
-            fixture.ExpectedPartitionKey = "/TaskName";
             fixture.SetUp();
 
             var repository = new GenericRepository<Todo>(fixture.Container, fixture.ExpectedPartitionKey);
 
             var actualTodo = await repository.CreateItemAsync(fixture.InputTodo);
             Assert.Equal(fixture.ExpectedTodo, actualTodo);
+        }
+
+        [Fact]
+        public async Task CreateItemAsyncWithException()
+        {
+            var fixture = new TodoFixture();
+            fixture.SetupWithException();
+            var repository = new GenericRepository<Todo>(fixture.Container, fixture.ExpectedPartitionKey);
+            var ex =
+                await Assert.ThrowsAsync<ArgumentException>(async () => await repository.CreateItemAsync(fixture.InputTodo));
+            Assert.Equal("Can not create the item. responseCode: InternalServerError", ex.Message);
         }
 
         private class TodoFixture
@@ -68,6 +68,7 @@ namespace CosmosDBV3Spike.Test
 
             public void SetUp()
             {
+                this.BasicSetup();
                 this._containerMock = new Mock<ICosmosContainerWrapper>();
                 var expectedCosmosItemResponseMock = new Mock<CosmosItemResponse<Todo>>();
                 expectedCosmosItemResponseMock.Setup(p => p.Resource).Returns(ExpectedTodo);
@@ -76,7 +77,33 @@ namespace CosmosDBV3Spike.Test
                 _containerMock.Setup(p =>
                         p.CreateItemAsync<Todo>(ExpectedPartitionKey, InputTodo, null, default(CancellationToken)))
                     .Returns(Task.FromResult(expectedCosmosItemResponseMock.Object));
+            }
 
+            public void SetupWithException()
+            {
+                this.BasicSetup();
+                this._containerMock = new Mock<ICosmosContainerWrapper>();
+                var expectedCosmosItemResponseMock = new Mock<CosmosItemResponse<Todo>>();
+                expectedCosmosItemResponseMock.Setup(p => p.Resource).Returns(ExpectedTodo);
+                expectedCosmosItemResponseMock.Setup(p => p.StatusCode).Returns(HttpStatusCode.InternalServerError);
+
+                _containerMock.Setup(p =>
+                        p.CreateItemAsync<Todo>(ExpectedPartitionKey, InputTodo, null, default(CancellationToken)))
+                    .Returns(Task.FromResult(expectedCosmosItemResponseMock.Object));
+            }
+
+            public void BasicSetup()
+            {
+                this.InputTodo = new Todo
+                {
+                    UserName = "Tsuyoshi Ushio",
+                    TaskName = "Tidy up my bedroom",
+                    Type = "household",
+                    IsSparkJoy = true
+                };
+                this.ExpectedTodo = this.InputTodo.Clone();
+                this.ExpectedTodo.Id = "foo";
+                this.ExpectedPartitionKey = "/TaskName";
             }
         }
 
