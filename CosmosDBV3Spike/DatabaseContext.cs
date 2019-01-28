@@ -8,7 +8,7 @@ namespace CosmosDBV3Spike
 {
     public interface IDatabaseContext
     {
-        Task<CosmosContainerWrapper> CreateContainerIfNotExistsAsync<T>(string id, string partitionKey);
+        Task<CosmosContainerResponse> CreateContainerIfNotExistsAsync<T>(string id, string partitionKey);
     }
 
     public class DatabaseContext : IDatabaseContext
@@ -20,10 +20,9 @@ namespace CosmosDBV3Spike
             this.Database = database;
         }
 
-        public async Task<CosmosContainerWrapper> CreateContainerIfNotExistsAsync<T>(string id, string partitionKey)
+        public async Task<CosmosContainerResponse> CreateContainerIfNotExistsAsync<T>(string id, string partitionKey)
         {
-            var containerResponse = await this.Database.Containers.CreateContainerIfNotExistsAsync(id, partitionKey);
-            return new CosmosContainerWrapper(containerResponse.Container);
+            return await this.Database.Containers.CreateContainerIfNotExistsAsync(id, partitionKey);
         }
 
     }

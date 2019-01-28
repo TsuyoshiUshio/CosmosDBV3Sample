@@ -1,26 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 
 namespace CosmosDBV3Spike
 {
-  
-    public class GenericRepository<T> 
+    public interface IGenericRepository<T>
     {
-        private ICosmosContainerWrapper Container { get; set; }
-        private string PartitionKey { get; set; }
+        Task<T> CreateItemAsync(T item);
+    }
 
-        public GenericRepository(ICosmosContainerWrapper container, string partitionKey)
+    public class GenericRepository<T> : IGenericRepository<T>
+    {
+        protected CosmosContainerResponse ContainerResponse { get; set; }
+        protected string PartitionKey { get; set; }
+
+        public GenericRepository(CosmosContainerResponse containerResponse, string partitionKey)
         {
-            this.Container = container;
+            this.ContainerResponse = containerResponse;
             this.PartitionKey = partitionKey;
+            this.SetupDefaultFunction();
         }
+
+        private void SetupDefaultFunction()
+        {
+            CreateItemAsyncFunc = (partitionKey, item) => this.ContainerResponse.Container.Items.CreateItemAsync(this.PartitionKey, item);
+        }
+
+        internal Func<object, T, Task<CosmosItemResponse<T>>> CreateItemAsyncFunc { get; set; }
 
         public async Task<T> CreateItemAsync(T item)
         {
-            var response = await this.Container.CreateItemAsync(this.PartitionKey, item);
+            var response = await this.CreateItemAsyncFunc(this.PartitionKey, item);
             if (!response.StatusCode.IsSuccessStatusCode())
             {
                 // TODO I'm not sure if throwing ArgumentException is good or not

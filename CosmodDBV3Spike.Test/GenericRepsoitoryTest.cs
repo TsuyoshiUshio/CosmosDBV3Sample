@@ -42,7 +42,7 @@ namespace CosmosDBV3Spike.Test
             fixture.SetUp();
 
             var repository = new GenericRepository<Todo>(fixture.Container, fixture.ExpectedPartitionKey);
-
+            repository.CreateItemAsyncFunc = fixture.CreateItemAsyncFunc;
             var actualTodo = await repository.CreateItemAsync(fixture.InputTodo);
             Assert.Equal(fixture.ExpectedTodo, actualTodo);
         }
@@ -53,6 +53,7 @@ namespace CosmosDBV3Spike.Test
             var fixture = new TodoFixture();
             fixture.SetupWithException();
             var repository = new GenericRepository<Todo>(fixture.Container, fixture.ExpectedPartitionKey);
+            repository.CreateItemAsyncFunc = fixture.CreateItemAsyncFunc;
             var ex =
                 await Assert.ThrowsAsync<ArgumentException>(async () => await repository.CreateItemAsync(fixture.InputTodo));
             Assert.Equal("Can not create the item. responseCode: InternalServerError", ex.Message);
@@ -60,36 +61,38 @@ namespace CosmosDBV3Spike.Test
 
         private class TodoFixture
         {
-            private Mock<ICosmosContainerWrapper> _containerMock;
-            public ICosmosContainerWrapper Container => this._containerMock.Object;
+            private Mock<CosmosContainerResponse> _containerResponseMock;
+            public CosmosContainerResponse Container => this._containerResponseMock.Object;
             public Todo ExpectedTodo { get; set; }
             public Todo InputTodo { get; set; }
             public string ExpectedPartitionKey { get; set; }
 
+            // Can't mock the method. Instead, inject Func.
+            public Func<object, Todo, Task<CosmosItemResponse<Todo>>> CreateItemAsyncFunc { get; set; }
+
             public void SetUp()
             {
                 this.BasicSetup();
-                this._containerMock = new Mock<ICosmosContainerWrapper>();
+                this._containerResponseMock = new Mock<CosmosContainerResponse>();
+               
+
                 var expectedCosmosItemResponseMock = new Mock<CosmosItemResponse<Todo>>();
                 expectedCosmosItemResponseMock.Setup(p => p.Resource).Returns(ExpectedTodo);
                 expectedCosmosItemResponseMock.Setup(p => p.StatusCode).Returns(HttpStatusCode.OK);
 
-                _containerMock.Setup(p =>
-                        p.CreateItemAsync<Todo>(ExpectedPartitionKey, InputTodo, null, default(CancellationToken)))
-                    .Returns(Task.FromResult(expectedCosmosItemResponseMock.Object));
+                CreateItemAsyncFunc = (partitionKey, item) => { return Task.FromResult(expectedCosmosItemResponseMock.Object); };
             }
 
             public void SetupWithException()
             {
                 this.BasicSetup();
-                this._containerMock = new Mock<ICosmosContainerWrapper>();
+                this._containerResponseMock = new Mock<CosmosContainerResponse>();
                 var expectedCosmosItemResponseMock = new Mock<CosmosItemResponse<Todo>>();
                 expectedCosmosItemResponseMock.Setup(p => p.Resource).Returns(ExpectedTodo);
                 expectedCosmosItemResponseMock.Setup(p => p.StatusCode).Returns(HttpStatusCode.InternalServerError);
 
-                _containerMock.Setup(p =>
-                        p.CreateItemAsync<Todo>(ExpectedPartitionKey, InputTodo, null, default(CancellationToken)))
-                    .Returns(Task.FromResult(expectedCosmosItemResponseMock.Object));
+                CreateItemAsyncFunc = (partitionKey, item) => { return Task.FromResult(expectedCosmosItemResponseMock.Object); };
+
             }
 
             public void BasicSetup()
@@ -107,26 +110,6 @@ namespace CosmosDBV3Spike.Test
             }
         }
 
-        public class Todo
-        {
-            [JsonProperty(PropertyName = "id")]
-            public string Id { get; set; }
-            public string UserName { get; set; }
-            public string TaskName { get; set; }
-            public string Type { get; set; }
-            public Boolean IsSparkJoy { get; set; }
 
-            public Todo Clone()
-            {
-                return new Todo()
-                {
-                    Id = this.Id,
-                    UserName = this.UserName,
-                    TaskName = this.TaskName,
-                    Type = this.Type,
-                    IsSparkJoy = this.IsSparkJoy
-                };
-            }
-        }
     }
 }
