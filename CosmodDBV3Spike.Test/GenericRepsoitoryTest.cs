@@ -43,7 +43,7 @@ namespace CosmosDBV3Spike.Test
 
             var repository = new GenericRepository<Todo>(fixture.Container, fixture.ExpectedPartitionKey);
             repository.CreateItemAsyncFunc = fixture.CreateItemAsyncFunc;
-            var actualTodo = await repository.CreateItemAsync(fixture.InputTodo);
+            var actualTodo = await repository.CreateItemAsync(fixture.InputTodo.UserName, fixture.InputTodo);
             Assert.Equal(fixture.ExpectedTodo, actualTodo);
         }
 
@@ -55,7 +55,7 @@ namespace CosmosDBV3Spike.Test
             var repository = new GenericRepository<Todo>(fixture.Container, fixture.ExpectedPartitionKey);
             repository.CreateItemAsyncFunc = fixture.CreateItemAsyncFunc;
             var ex =
-                await Assert.ThrowsAsync<ArgumentException>(async () => await repository.CreateItemAsync(fixture.InputTodo));
+                await Assert.ThrowsAsync<ArgumentException>(async () => await repository.CreateItemAsync(fixture.InputTodo.UserName, fixture.InputTodo));
             Assert.Equal("Can not create the item. responseCode: InternalServerError", ex.Message);
         }
 

@@ -9,7 +9,7 @@ namespace CosmosDBV3Spike
 {
     public interface IGenericRepository<T>
     {
-        Task<T> CreateItemAsync(T item);
+        Task<T> CreateItemAsync(string partitionKey, T item);
     }
 
     public class GenericRepository<T> : IGenericRepository<T>
@@ -26,14 +26,18 @@ namespace CosmosDBV3Spike
 
         private void SetupDefaultFunction()
         {
-            CreateItemAsyncFunc = (partitionKey, item) => this.ContainerResponse.Container.Items.CreateItemAsync(this.PartitionKey, item);
+            CreateItemAsyncFunc = async (partitionKey, item) =>
+            {
+                var resonse = await this.ContainerResponse.Container.Items.CreateItemAsync(partitionKey, item);
+                return resonse;
+            };
         }
 
         internal Func<object, T, Task<CosmosItemResponse<T>>> CreateItemAsyncFunc { get; set; }
 
-        public async Task<T> CreateItemAsync(T item)
+        public async Task<T> CreateItemAsync(string partitionKey, T item)
         {
-            var response = await this.CreateItemAsyncFunc(this.PartitionKey, item);
+            var response = await this.CreateItemAsyncFunc(partitionKey, item);
             if (!response.StatusCode.IsSuccessStatusCode())
             {
                 // TODO I'm not sure if throwing ArgumentException is good or not

@@ -8,13 +8,13 @@ namespace CosmosDBV3Spike
 {
     public interface ITodoRepository
     {
-        Task<Todo> CreateItemAsync(Todo item);
-      //  Task<IEnumerable<Todo>> QueryWithUserName(string userName);
+        Task<Todo> CreateItemAsync(string partitionKey, Todo item);
+        Task<IEnumerable<Todo>> QueryWithUserNameAsync(string userName);
     }
 
     public class TodoRepository : GenericRepository<Todo>, ITodoRepository
     {
-        public TodoRepository(CosmosContainerResponse containerResponse) : this(containerResponse, "/TaskName")
+        public TodoRepository(CosmosContainerResponse containerResponse) : this(containerResponse, "/UserName")
         {
 
         }
@@ -22,12 +22,19 @@ namespace CosmosDBV3Spike
         {
         }
 
-        //public Task<IEnumerable<Todo>> QueryWithUserName(string userName)
-        //{
-            
-        //    var query = new CosmosSqlQueryDefinition("SELECT * FROM Todo t WHERE f.UserName = @userName")
-        //        .UseParameter("@userName", userName);
-        //   ContainerResponse.Container.Items.
-        //}
+        public async Task<IEnumerable<Todo>> QueryWithUserNameAsync(string userName)
+        {
+
+            var query = new CosmosSqlQueryDefinition("SELECT * FROM Todo t WHERE t.UserName = @userName")
+                .UseParameter("@userName", userName);
+            var iterator = ContainerResponse.Container.Items.CreateItemQuery<Todo>(query, partitionKey:userName);
+            var result = new List<Todo>();
+            while (iterator.HasMoreResults)
+            {
+                result.AddRange((await iterator.FetchNextSetAsync()));
+            }
+
+            return result;
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.Azure.Cosmos;
@@ -36,6 +37,7 @@ namespace CosmosDBV3Spike.IntegrationTest
             // Create records
             var todo01 = new Todo
             {
+                Id = "1", // Is it necessary? If not, it throws error {"Errors":["The input name 'null' is invalid. Ensure to provide a unique non-empty string less than '255' characters."]}
                 TaskName = "Clean up my bedroom",
                 UserName = "Tsuyoshi Ushio",
                 Type = "Household",
@@ -43,6 +45,7 @@ namespace CosmosDBV3Spike.IntegrationTest
             };
             var todo02 = new Todo
             {
+                Id = "2",
                 TaskName = "Paperwork",
                 UserName = "Tsuyoshi Ushio",
                 Type = "Work",
@@ -50,18 +53,20 @@ namespace CosmosDBV3Spike.IntegrationTest
             };
             var todo03 = new Todo
             {
+                Id = "3",
                 TaskName = "Programming",
                 UserName = "Osvaldo",
                 Type = "Work",
                 IsSparkJoy = true
             };
-            await repository.CreateItemAsync(todo01);
-            await repository.CreateItemAsync(todo02);
-            await repository.CreateItemAsync(todo03);
+            await repository.CreateItemAsync(todo01.UserName, todo01);
+            await repository.CreateItemAsync(todo02.UserName, todo02);
+            await repository.CreateItemAsync(todo03.UserName, todo03);
 
             // Query records
 
-           
+            var results = await repository.QueryWithUserNameAsync("Tsuyoshi Ushio");
+            Assert.Equal(2, results.Count());
             // Update records
             // Delete records
         }
@@ -85,9 +90,9 @@ namespace CosmosDBV3Spike.IntegrationTest
             var database = databaseResponse.Database;
             
             services.AddSingleton<CosmosDatabase>(database);
-            services.AddSingleton<IDatabaseContext>();
+            services.AddSingleton<IDatabaseContext>(new DatabaseContext(database));
             // I need specify the PartitionKey here, however, I need to add it inside the TodoRepository constructor. It is weird.
-            var cosmosContainer = await database.Containers.CreateContainerIfNotExistsAsync("Todo", "/TaskName");
+            var cosmosContainer = await database.Containers.CreateContainerIfNotExistsAsync("Todo", "/UserName");
             
             services.AddSingleton<ITodoRepository>(new TodoRepository(cosmosContainer));
             Provider = services.BuildServiceProvider();
